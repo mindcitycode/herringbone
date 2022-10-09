@@ -37,7 +37,7 @@ const HerringboneTilesSources = {
 
 const go = async () => {
 
-    const image = await loadImage('/assets/chunks.png')
+    const image = await loadImage('assets/chunks.png')
     const short = 10, long = 20;
 
     const putRandomTile = (x, y, type, { real = true, outline = false } = {}) => {
