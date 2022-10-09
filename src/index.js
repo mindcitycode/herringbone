@@ -11,9 +11,12 @@ const keyboard = registerKeyboard()
 const rng = seedrandom('hello.');
 const rndInt = (min, max) => min + Math.floor((max - min) * rng())
 
-const canvas = fsCanvas(132, 155)
+const canvas = fsCanvas(128, 128)
 const ctx = canvas.getContext('2d')
-
+const clear = () => {
+    ctx.fillStyle = 'white'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+}
 const sourceRect = ({ stride, tw, th, sx, sy, ox, oy }, n) => {
     const i = n % stride
     const j = Math.floor(n / stride)
@@ -37,19 +40,17 @@ const go = async () => {
     const short = 10, long = 20;
 
     const putRandomTile = (x, y, type, real = true, outline = false) => {
-
-        const w = (type === 0) ? short : long
-        const h = (type === 0) ? long : short
-
         if (real) {
             const rects = HerringboneTilesSources[(type === 0) ? 'vertical' : 'horizontal']
             const rect = rects[Math.floor(rng() * rects.length)]
-            ctx.drawImage(image, ...rect, x, y, w, h)
+            ctx.drawImage(image, ...rect, x, y, ...rect.slice(2, 4))
         }
         if (outline) {
+            const w = (type === 0) ? short : long
+            const h = (type === 0) ? long : short
             const alpha = 0.75
-            const s = 30 + rng() * 40
-            const l = 30 + rng() * 70
+            const s = 30 + rng() * 20
+            const l = 30 + rng() * 20
             const hue = rng()
             ctx.fillStyle = `hsla(${hue}turn, ${s}%, ${l}%, ${alpha})`
             ctx.fillRect(x, y, w, h)
@@ -68,63 +69,55 @@ const go = async () => {
     }
 
     const map = {
-        rows: 20,
-        columns: 20,
+        rows: 9,
+        columns: 9,
         tiles: []
     }
-    for (let r = 0; r < map.rows; r++) {
-        for (let c = 0; c < map.columns; c++) {
-            const r4 = r % 4, c4 = c % 4;
-            if ((c4 === 0) && (r4 === 0)) {
-                putRandomTile(c * short, r * short, 0)
-            } else if ((c4 === 1) && (r4 === 0)) {
-                putRandomTile(c * short, r * short, 1)
-            } else if ((c4 === 3) && (r4 === 0)) {
-                putRandomTile(c * short, (r-1) * short, 0)
-            } else if ((c4 === 0) && (r4 === 2)) {
-                putRandomTile((c-1) * short, r * short, 1)
-            } else if ((c4 === 0) && (r4 === 3)) {
-                putRandomTile(c * short, r * short, 1)
-            } else if ((c4 === 1) && (r4 === 1)) {
-                putRandomTile(c * short, r * short, 0)
-            } else if ((c4 === 2) && (r4 === 1)) {
-                putRandomTile(c * short, r * short, 1)
-            } else if ((c4 === 2) && (r4 === 2)) {
-                putRandomTile(c * short, r * short, 0)
-            } 
+
+    function getFromRowCol(i, j) {
+        const r4 = r % 4, c4 = c % 4;
+        if (r4 === c4) {
+            // top from vertical
+            return ['vertical', i, j, 'up']
+        } else if (((c + 1) % 4) === ((r) % 4)) {
+            // bottom from vertical
+            return ['vertical', i, j - 1, 'low']
+        } else if (((c) % 4) === ((r + 1) % 4)) {
+            // left from horizontal
+            return ['horizontal', i, j, 'left']
+        } else if (((c) % 4) === ((r + 2) % 4)) {
+            // right from horisontal
+            return ['horizontal', i - 1, j, 'right']
         }
     }
 
+    const draw = () => {
+        for (let r = 0; r < map.rows; r++) {
+            for (let c = 0; c < map.columns; c++) {
+                if ((c % 4) === (r % 4)) {
+                    putRandomTile(c * short, r * short, 0)
+                } else if (((c + 1) % 4) === (r % 4)) {
+                    if (r === 0) {
+                        putRandomTile(c * short, (r - 1) * short, 0)
+                    }
+                } else if ((c % 4) === ((r + 1) % 4)) {
+                    putRandomTile(c * short, r * short, 1)
+                } else if ((c % 4) === ((r + 2) % 4)) {
+                    if (c === 0) {
+                        putRandomTile((c - 1) * short, r * short, 1)
+                    }
+                }
 
-
-    function non() {
-        let x = 0, y = 0
-        //for (let i = 0; i < 1 ; i++)
-        for (let i = 0; i < (canvas.width / short); i++) {
-            putRandomTile(x, y, 0)
-            //        putRandomTile(x + short, y, 1)
-            putRandomTile(x + 30, y - short, 0)
-
-            // width loop
-            putRandomTile(x + 40, y, 0)
-
-            putRandomTile(x - short, y + long, 1)
-
-            //      putRandomTile(x, y + 30, 1)
-            // height loop
-            putRandomTile(x, y + 40, 0)
-
-
-            x += short
-            y += short
-
+            }
         }
     }
+    draw()
 
-
-    rafLoop((delta, time) => {
-
-    })
+    if (false)
+        rafLoop((delta, time) => {
+            clear()
+            draw()
+        })
 
 }
 go()
