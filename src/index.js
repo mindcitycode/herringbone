@@ -12,7 +12,7 @@ const keyboard = registerKeyboard()
 const rng = seedrandom('hello.');
 const rndInt = (min, max) => min + Math.floor((max - min) * rng())
 
-const canvas = fsCanvas(window.innerWidth,window.innerHeight)
+const canvas = fsCanvas(128,128)
 const ctx = canvas.getContext('2d')
 const clear = () => {
     ctx.fillStyle = 'white'
