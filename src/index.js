@@ -8,12 +8,10 @@ import { loadImage } from './lib/image.js'
 
 const keyboard = registerKeyboard()
 
-// rng
 const rng = seedrandom('hello.');
 const rndInt = (min, max) => min + Math.floor((max - min) * rng())
 
-// image
-const canvas = fsCanvas(200, 200)
+const canvas = fsCanvas(132, 155)
 const ctx = canvas.getContext('2d')
 
 const sourceRect = ({ stride, tw, th, sx, sy, ox, oy }, n) => {
@@ -36,48 +34,91 @@ const HerringboneTilesSources = {
 const go = async () => {
 
     const image = await loadImage('/assets/chunks.png')
-    console.log(HerringboneTilesSources)
+    const short = 10, long = 20;
 
-    const tileSource0 = HerringboneTilesSources.vertical[0]
-    ctx.drawImage(image, ...tileSource0, 0, 0, 10, 20)
-    const tileSource1 = HerringboneTilesSources.vertical[17]
-    ctx.drawImage(image, ...tileSource1, 10, 0, 10, 20)
+    const putRandomTile = (x, y, type, real = true, outline = false) => {
 
-    const tileSource2 = HerringboneTilesSources.horizontal[0]
-    ctx.drawImage(image, ...tileSource2, 0, 40, 20, 10)
-    const tileSource3 = HerringboneTilesSources.horizontal[8]
-    ctx.drawImage(image, ...tileSource3, 0, 50, 20, 10)
+        const w = (type === 0) ? short : long
+        const h = (type === 0) ? long : short
 
-    const putTile = (x, y, type) => {
+        if (real) {
+            const rects = HerringboneTilesSources[(type === 0) ? 'vertical' : 'horizontal']
+            const rect = rects[Math.floor(rng() * rects.length)]
+            ctx.drawImage(image, ...rect, x, y, w, h)
+        }
+        if (outline) {
+            const alpha = 0.75
+            const s = 30 + rng() * 40
+            const l = 30 + rng() * 70
+            const hue = rng()
+            ctx.fillStyle = `hsla(${hue}turn, ${s}%, ${l}%, ${alpha})`
+            ctx.fillRect(x, y, w, h)
+        }
+    }
 
-        const w = (type === 0) ? 10 : 20
-        const h = (type === 0) ? 20 : 10
+    class Tile {
+        constructor(x, y, type, index) {
+            Object.assign(this, { x, y, type, index })
+        }
+        getRect() {
+            const w = (type === 0) ? short : long
+            const h = (type === 0) ? long : short
+            return [x, y, w, h]
+        }
+    }
 
-        const rects = HerringboneTilesSources[(type === 0) ? 'vertical' : 'horizontal']
-        const rect = rects[Math.floor(rng() * rects.length)]
-        ctx.drawImage(image, ...rect, x, y, w, h)
-       
-        return 
-        
-        const alpha = 0.5
-        const hue = rng()
-        ctx.fillStyle = `hsla(${hue}turn, 40%, 40%, ${alpha})`
-        ctx.fillRect(x, y, w, h)
-
-        ctx.lineWidth = 1
-        ctx.strokeStyle = `hsla(${hue}turn, 0%, 0%, ${1})`
-        ctx.strokeRect(x + 1, y + 1, w - 2, h - 2)
-
+    const map = {
+        rows: 20,
+        columns: 20,
+        tiles: []
+    }
+    for (let r = 0; r < map.rows; r++) {
+        for (let c = 0; c < map.columns; c++) {
+            const r4 = r % 4, c4 = c % 4;
+            if ((c4 === 0) && (r4 === 0)) {
+                putRandomTile(c * short, r * short, 0)
+            } else if ((c4 === 1) && (r4 === 0)) {
+                putRandomTile(c * short, r * short, 1)
+            } else if ((c4 === 3) && (r4 === 0)) {
+                putRandomTile(c * short, (r-1) * short, 0)
+            } else if ((c4 === 0) && (r4 === 2)) {
+                putRandomTile((c-1) * short, r * short, 1)
+            } else if ((c4 === 0) && (r4 === 3)) {
+                putRandomTile(c * short, r * short, 1)
+            } else if ((c4 === 1) && (r4 === 1)) {
+                putRandomTile(c * short, r * short, 0)
+            } else if ((c4 === 2) && (r4 === 1)) {
+                putRandomTile(c * short, r * short, 1)
+            } else if ((c4 === 2) && (r4 === 2)) {
+                putRandomTile(c * short, r * short, 0)
+            } 
+        }
     }
 
 
-    let x = 0, y = 0
-    for (let i = 0; i < (canvas.width / 10); i++) {
-        putTile(x, y, 0)
-        putTile(x + 10, y, 1)
-        putTile(x + 30, y - 10, 0)
-        x += 10
-        y += 10
+
+    function non() {
+        let x = 0, y = 0
+        //for (let i = 0; i < 1 ; i++)
+        for (let i = 0; i < (canvas.width / short); i++) {
+            putRandomTile(x, y, 0)
+            //        putRandomTile(x + short, y, 1)
+            putRandomTile(x + 30, y - short, 0)
+
+            // width loop
+            putRandomTile(x + 40, y, 0)
+
+            putRandomTile(x - short, y + long, 1)
+
+            //      putRandomTile(x, y + 30, 1)
+            // height loop
+            putRandomTile(x, y + 40, 0)
+
+
+            x += short
+            y += short
+
+        }
     }
 
 
